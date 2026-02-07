@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouthMappers Labs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .repositories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .repo-card {
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .repo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .repo-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #667eea;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .repo-name:hover {
+            text-decoration: underline;
+        }
+
+        .repo-description {
+            color: #586069;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+
+        .repo-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: #586069;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .language {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            color: #666;
+            border-top: 1px solid #e1e4e8;
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🗺️ YouthMappers Labs</h1>
+            <p>Showcasing innovative projects from YouthMappers chapters worldwide</p>
+        </header>
+
+        <div class="content">
+            <div id="stats" class="stats" style="display: none;">
+                <div class="stat">
+                    <div class="stat-value" id="repo-count">0</div>
+                    <div class="stat-label">Public Repositories</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="star-count">0</div>
+                    <div class="stat-label">Total Stars</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="fork-count">0</div>
+                    <div class="stat-label">Total Forks</div>
+                </div>
+            </div>
+
+            <div id="loading" class="loading">Loading repositories...</div>
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="repositories" class="repositories"></div>
+        </div>
+
+        <footer>
+            <p>
+                Made with ❤️ by <a href="https://www.youthmappers.org" target="_blank">YouthMappers</a> | 
+                <a href="https://github.com/youthmappers" target="_blank">View on GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const GITHUB_ORG = 'youthmappers';
+        const API_URL = `https://api.github.com/orgs/${GITHUB_ORG}/repos`;
+
+        async function fetchRepositories() {
+            try {
+                const response = await fetch(`${API_URL}?type=public&sort=updated&per_page=100`);
+                
+                if (!response.ok) {
+                    throw new Error(`GitHub API returned ${response.status}: ${response.statusText}`);
+                }
+
+                const repos = await response.json();
+                
+                // Filter out archived repositories and sort by stars
+                const activeRepos = repos
+                    .filter(repo => !repo.archived)
+                    .sort((a, b) => b.stargazers_count - a.stargazers_count);
+
+                displayRepositories(activeRepos);
+                displayStats(activeRepos);
+                
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error fetching repositories:', error);
+                document.getElementById('loading').style.display = 'none';
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = `Failed to load repositories: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function displayStats(repos) {
+            const totalStars = repos.reduce((sum, repo) => sum + repo.stargazers_count, 0);
+            const totalForks = repos.reduce((sum, repo) => sum + repo.forks_count, 0);
+
+            document.getElementById('repo-count').textContent = repos.length;
+            document.getElementById('star-count').textContent = totalStars;
+            document.getElementById('fork-count').textContent = totalForks;
+            document.getElementById('stats').style.display = 'flex';
+        }
+
+        function displayRepositories(repos) {
+            const container = document.getElementById('repositories');
+            
+            if (repos.length === 0) {
+                container.innerHTML = '<p>No public repositories found.</p>';
+                return;
+            }
+
+            container.innerHTML = repos.map(repo => `
+                <div class="repo-card">
+                    <a href="${repo.html_url}" target="_blank" class="repo-name">
+                        ${repo.name}
+                    </a>
+                    <div class="repo-description">
+                        ${repo.description || 'No description available'}
+                    </div>
+                    <div class="repo-meta">
+                        ${repo.language ? `<span class="language">${repo.language}</span>` : ''}
+                        <div class="meta-item">
+                            <svg class="icon" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
+                            </svg>
+                            ${repo.stargazers_count}
+                        </div>
+                        <div class="meta-item">
+                            <svg class="icon" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z"/>
+                            </svg>
+                            ${repo.forks_count}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load repositories when page loads
+        fetchRepositories();
+    </script>
+</body>
+</html>
