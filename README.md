@@ -14,7 +14,9 @@ This site automatically displays all public repositories from the [YouthMappers 
 
 The site is automatically deployed to GitHub Pages via GitHub Actions whenever changes are pushed to the `main` branch.
 
-**Live Site:** https://labs.youthmappers.org
+**Live Site:** https://youthmappers.github.io
+
+> Note: A custom domain (labs.youthmappers.org) can be configured in the future by adding a CNAME file.
 
 ## Features
 
