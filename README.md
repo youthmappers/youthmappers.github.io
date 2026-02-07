@@ -9,10 +9,16 @@ This site automatically displays all public repositories from the [YouthMappers 
 - Programming languages used
 - Star and fork counts
 - Links to each repository
+- Links to project websites (if available)
+
+The site excludes the `.github` and `youthmappers.github.io` repositories from the listing.
 
 ## Deployment
 
-The site is automatically deployed to GitHub Pages via GitHub Actions whenever changes are pushed to the `main` branch.
+The site is automatically deployed to GitHub Pages via GitHub Actions:
+- On every push to the `main` branch
+- **Weekly** every Monday at 00:00 UTC to refresh repository data
+- Manually via workflow dispatch
 
 **Live Site:** https://youthmappers.github.io
 
@@ -28,18 +34,30 @@ The site is automatically deployed to GitHub Pages via GitHub Actions whenever c
 
 ## Technology Stack
 
-- Pure HTML, CSS, and JavaScript (no build process required)
-- GitHub Pages for hosting
-- GitHub Actions for automated deployment
-- GitHub API for repository data
+- **Svelte** - Modern, reactive UI framework
+- **Vite** - Fast build tool and dev server
+- **GitHub Pages** for hosting
+- **GitHub Actions** for automated deployment and weekly builds
+- **GitHub API** for repository data
 
 ## Local Development
 
 To view the site locally:
 
 1. Clone this repository
-2. Open `index.html` in a web browser
-3. The site will fetch live data from the GitHub API
+2. Install dependencies: `npm install`
+3. Run the development server: `npm run dev`
+4. Open your browser to the URL shown (typically `http://localhost:5173`)
+
+The site will fetch live data from the GitHub API.
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+This creates an optimized build in the `dist` directory.
 
 ## Contributing
 
