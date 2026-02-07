@@ -215,15 +215,56 @@
         const GITHUB_ORG = 'youthmappers';
         const API_URL = `https://api.github.com/orgs/${GITHUB_ORG}/repos`;
 
+        async function fetchAllRepositories() {
+            const allRepos = [];
+            let page = 1;
+            const perPage = 100;
+
+            try {
+                while (true) {
+                    const response = await fetch(`${API_URL}?type=public&sort=updated&per_page=${perPage}&page=${page}`);
+                    
+                    // Check rate limits
+                    const rateLimit = response.headers.get('X-RateLimit-Remaining');
+                    const rateLimitReset = response.headers.get('X-RateLimit-Reset');
+                    
+                    if (rateLimit !== null && parseInt(rateLimit) < 5) {
+                        const resetTime = new Date(parseInt(rateLimitReset) * 1000);
+                        console.warn(`Approaching rate limit. Resets at ${resetTime.toLocaleTimeString()}`);
+                    }
+                    
+                    if (!response.ok) {
+                        if (response.status === 403 && rateLimit === '0') {
+                            throw new Error('GitHub API rate limit exceeded. Please try again later.');
+                        }
+                        throw new Error(`GitHub API returned ${response.status}: ${response.statusText}`);
+                    }
+
+                    const repos = await response.json();
+                    
+                    if (repos.length === 0) {
+                        break; // No more repositories
+                    }
+                    
+                    allRepos.push(...repos);
+                    
+                    // If we got fewer than perPage results, we've reached the end
+                    if (repos.length < perPage) {
+                        break;
+                    }
+                    
+                    page++;
+                }
+                
+                return allRepos;
+            } catch (error) {
+                throw error;
+            }
+        }
+
         async function fetchRepositories() {
             try {
-                const response = await fetch(`${API_URL}?type=public&sort=updated&per_page=100`);
-                
-                if (!response.ok) {
-                    throw new Error(`GitHub API returned ${response.status}: ${response.statusText}`);
-                }
-
-                const repos = await response.json();
+                const repos = await fetchAllRepositories();
                 
                 // Filter out archived repositories and sort by stars
                 const activeRepos = repos
